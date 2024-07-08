@@ -1,4 +1,4 @@
-package data.model.entity
+package model.entity
 
 data class SportEventEntity(
     val id: Long,

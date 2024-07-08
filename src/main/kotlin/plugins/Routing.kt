@@ -1,15 +1,24 @@
-package app.plugins
+package plugins
 
-import data.model.basic.Location
-import data.model.entity.SportEventEntity
-import data.model.request.LocationFilter
-import data.model.request.SearchEventFilter
+import model.basic.Location
+import model.entity.SportEventEntity
+import model.request.LocationFilter
+import model.request.SearchEventFilter
 import data.source.RemoteSource
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
+
+object Routes {
+    const val createEvent = "api/events/create"
+    const val searchEvents = "api/events/search"
+    const val subscribeToEvent = "api/events/subscribe"
+    const val getAbailableLocations = "api/locations/available"
+    const val getLocationBookings = "api/locations/{location_id}/bookings"
+    const val getUser = "api/users/{user_id}"
+}
 
 fun Application.configureRouting(remoteSource: RemoteSource) {
     configureEventsRouting(remoteSource)
@@ -22,23 +31,21 @@ fun Application.configureEventsRouting(
 ) {
     routing {
 
-        post("api/events/create") {
+        post(Routes.createEvent) {
             val sportEventEntity = call.receive<SportEventEntity>()
             val result = remoteSource.createEvent(sportEventEntity = sportEventEntity)
             call.respond("Success!")
         }
 
-        get("api/events/search") {
+        get(Routes.searchEvents) {
 
             val queryParams = call.request.queryParameters
 
             val searchEventFilter = try {
-                val types = queryParams["types"]
+                val types = queryParams["types"]?.split(",")?.map { it.toInt() }
+                val skillLevels = queryParams["skill_levels"]?.split(",")?.map { it.toInt() }
 
                 println(types)
-
-                val skillLevels = queryParams["skill_levels"]
-
                 println(skillLevels)
 
                 val minParticipatorsAmount = queryParams["min_participators_amount"]?.toInt()
@@ -63,8 +70,8 @@ fun Application.configureEventsRouting(
                 val limit = queryParams["limit"]?.toInt()
 
                 SearchEventFilter(
-                    types = emptyList(),
-                    skillLevels = emptyList(),
+                    types = types,
+                    skillLevels = skillLevels,
                     minParticipatorsAmount = minParticipatorsAmount,
                     maxParticipatorsAmount = maxParticipatorsAmount,
                     startDate = startDate,
@@ -96,7 +103,7 @@ fun Application.configureEventsRouting(
             }
         }
 
-        post("api/events/subscribe") {
+        post(Routes.subscribeToEvent) {
             val queryParameters = call.request.queryParameters
             val userId = queryParameters.getOrFail("user_id").toLong()
             val eventId = queryParameters.getOrFail("event_id").toLong()
@@ -114,7 +121,7 @@ fun Application.configureLocationsRouting(
     remoteSource: RemoteSource
 ) {
     routing {
-        get("api/locations/sport") {
+        get(Routes.getAbailableLocations) {
             val queryParams = call.request.queryParameters
 
             val minParticipatorsAmount = queryParams["min_participators_amount"]?.toInt()
@@ -162,14 +169,14 @@ fun Application.configureLocationsRouting(
 
             val result = remoteSource.getSportLocations(searchEventFilter = searchEventFilter)
             if (result.isEmpty()) {
-                call.respond("Failure. Empty resulttt.")
+                call.respond("Failure. Empty result.")
             } else {
                 call.respond(result)
             }
 
         }
 
-        get("api/locations/{location_id}/bookings") {
+        get(Routes.getLocationBookings) {
             val locationId = call.parameters["location_id"]?.toLong()
             if (locationId == null) {
                 call.respond("Failure. Location not found")
@@ -189,7 +196,7 @@ fun Application.configureUsersRouting(
     remoteSource: RemoteSource
 ) {
     routing {
-        get("api/users/{user_id}") {
+        get(Routes.getUser) {
             val userId = call.parameters["user_id"]?.toLong()
             if (userId == null) {
                 call.respond("Failure. User not found")

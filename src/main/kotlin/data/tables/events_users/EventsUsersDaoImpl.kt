@@ -1,7 +1,7 @@
 package data.tables.events_users
 
 import data.tables.DatabaseFactory.dbQuery
-import data.model.entity.EventUserEntity
+import model.entity.EventUserEntity
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.and

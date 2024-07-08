@@ -1,6 +1,6 @@
 package data.utils
 
-import data.model.basic.Location
+import model.basic.Location
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.Function
 import kotlin.math.cos

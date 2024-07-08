@@ -1,9 +1,9 @@
 package data.converter
 
-import data.model.entity.SportEventEntity
-import data.model.response.LocationInfo
-import data.model.response.SportEvent
-import data.model.response.User
+import model.entity.SportEventEntity
+import model.response.LocationInfo
+import model.response.SportEvent
+import model.response.User
 
 fun SportEventEntity.toDto(
     admin: User,

@@ -1,8 +1,8 @@
 package data.converter
 
-import data.model.basic.Skill
-import data.model.entity.UserEntity
-import data.model.response.User
+import model.basic.Skill
+import model.entity.UserEntity
+import model.response.User
 
 // skills - "02,25" == Skill(Basketball, 2), Skill(Football, 5)
 fun convertSkills(skills: String) = skills.split("," ).mapNotNull {

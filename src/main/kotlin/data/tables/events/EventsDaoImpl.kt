@@ -2,8 +2,8 @@ package data.tables.events
 
 import data.tables.DatabaseFactory.dbQuery
 import data.tables.locations.Locations
-import data.model.request.SearchEventFilter
-import data.model.entity.SportEventEntity
+import model.request.SearchEventFilter
+import model.entity.SportEventEntity
 import data.tables.events_users.EventsUsersDao
 import data.utils.isNotNullOp
 import org.jetbrains.exposed.sql.*
@@ -24,7 +24,7 @@ class EventsDaoImpl(
                 val query = if (eventsFilter.isNotNullOp()) {
                     Events.select { eventsFilter }
                 } else {
-                    Events.selectAll()
+                     Events.selectAll()
                 }
                 query.apply {
                     searchEventFilter.limit?.let { limit ->

@@ -1,4 +1,4 @@
-package data.model.basic
+package model.basic
 
 import kotlinx.serialization.Serializable
 

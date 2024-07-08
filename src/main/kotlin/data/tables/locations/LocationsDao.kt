@@ -1,8 +1,8 @@
 package data.tables.locations
 
-import data.model.entity.LocationInfoEntity
-import data.model.entity.SportEventEntity
-import data.model.request.SearchEventFilter
+import model.entity.LocationInfoEntity
+import model.entity.SportEventEntity
+import model.request.SearchEventFilter
 
 interface LocationsDao {
 

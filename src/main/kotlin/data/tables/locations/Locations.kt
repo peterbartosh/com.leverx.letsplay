@@ -1,6 +1,6 @@
 package data.tables.locations
 
-import data.model.request.LocationFilter
+import model.request.LocationFilter
 import data.tables.events.Events
 import data.utils.DistanceFunction
 import org.jetbrains.exposed.sql.Op

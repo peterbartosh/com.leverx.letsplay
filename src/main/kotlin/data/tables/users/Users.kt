@@ -1,6 +1,6 @@
 package data.tables.users
 
-import data.model.basic.Skill
+import model.basic.Skill
 import org.jetbrains.exposed.sql.Table
 
 object Users : Table() {

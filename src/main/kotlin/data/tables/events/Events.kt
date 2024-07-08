@@ -1,13 +1,11 @@
 package data.tables.events
 
-import data.model.request.LocationFilter
-import data.model.request.SearchEventFilter
+import model.request.SearchEventFilter
 import data.tables.locations.Locations
 import data.tables.users.Users
-import data.utils.foldOp
+import data.utils.foldAnd
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
@@ -50,7 +48,7 @@ object Events : Table() {
         val sportTypesFilter = searchEventFilter.types?.ifEmpty { null }?.let { sportTypes ->
             Events.sportType.inList(sportTypes)
         }
-        val skillLevelsFilter = searchEventFilter.skillLevels?.let { skillLevels ->
+        val skillLevelsFilter = searchEventFilter.skillLevels?.ifEmpty { null }?.let { skillLevels ->
             Events.skillLevel.inList(skillLevels)
         }
         val startDateFilter = searchEventFilter.startDate?.let { startDate ->
@@ -74,6 +72,6 @@ object Events : Table() {
             endDateFilter,
             startTimeFilter,
             endTimeFilter
-        ).foldOp()
+        ).foldAnd()
     }
 }

@@ -1,6 +1,6 @@
-package data.model.response
+package model.response
 
-import data.model.basic.Location
+import model.basic.Location
 import kotlinx.serialization.Serializable
 
 @Serializable

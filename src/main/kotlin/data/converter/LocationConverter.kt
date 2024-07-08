@@ -1,8 +1,8 @@
 package data.converter
 
-import data.model.basic.Location
-import data.model.entity.LocationInfoEntity
-import data.model.response.LocationInfo
+import model.basic.Location
+import model.entity.LocationInfoEntity
+import model.response.LocationInfo
 
 fun LocationInfoEntity.toDto() = LocationInfo(
     id = id,

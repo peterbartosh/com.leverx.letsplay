@@ -1,17 +1,13 @@
 package app
 
 import app.init.InitDatabase
-import data.tables.DatabaseFactory
-import app.plugins.*
 import data.source.RemoteSource
-import data.tables.events.Events
-import data.tables.locations.Locations
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
-import kotlinx.coroutines.*
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.koin.core.component.KoinComponent
+import plugins.configureMonitoring
+import plugins.configureRouting
+import plugins.configureSerialization
 
 class Api(
     private val remoteSource: RemoteSource,
@@ -25,8 +21,6 @@ class Api(
         embeddedServer(factory = Netty, port = port) {
             configureSerialization()
             configureMonitoring()
-            configureHTTP()
-            configureSecurity()
 
             initDatabase()
 

@@ -1,6 +1,6 @@
 package data.tables.users
 
-import data.model.entity.UserEntity
+import model.entity.UserEntity
 
 interface UsersDao {
 

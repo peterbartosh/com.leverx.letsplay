@@ -1,7 +1,7 @@
 package data.tables.events
 
-import data.model.request.SearchEventFilter
-import data.model.entity.SportEventEntity
+import model.request.SearchEventFilter
+import model.entity.SportEventEntity
 
 interface EventsDao {
 

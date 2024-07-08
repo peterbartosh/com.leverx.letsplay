@@ -1,7 +1,7 @@
 package app.init
 
 import data.tables.locations.LocationsDao
-import data.model.entity.LocationInfoEntity
+import model.entity.LocationInfoEntity
 
 suspend fun LocationsDao.addSomeData(){
     this.addLocation(

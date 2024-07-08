@@ -1,6 +1,6 @@
 package data.tables.events_users
 
-import data.model.entity.EventUserEntity
+import model.entity.EventUserEntity
 
 interface EventsUsersDao {
 

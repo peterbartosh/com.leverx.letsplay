@@ -1,7 +1,7 @@
 package app.init
 
 import data.tables.events.EventsDao
-import data.model.entity.SportEventEntity
+import model.entity.SportEventEntity
 
 private const val MillisInDay = 1000 * 60 * 60 * 24L
 

@@ -1,7 +1,7 @@
 package data.tables.users
 
 import data.tables.DatabaseFactory.dbQuery
-import data.model.entity.UserEntity
+import model.entity.UserEntity
 import org.jetbrains.exposed.sql.*
 
 class UsersDaoImpl: UsersDao {

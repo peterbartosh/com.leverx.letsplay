@@ -1,4 +1,4 @@
-package app.plugins
+package plugins
 
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*

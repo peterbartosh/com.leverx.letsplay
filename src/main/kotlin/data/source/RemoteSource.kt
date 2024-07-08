@@ -1,12 +1,12 @@
 package data.source
 
 import data.converter.toDto
-import data.model.entity.SportEventEntity
-import data.model.request.SearchEventFilter
-import data.model.response.Booking
-import data.model.response.LocationInfo
-import data.model.response.SportEvent
-import data.model.response.User
+import model.entity.SportEventEntity
+import model.request.SearchEventFilter
+import model.response.Booking
+import model.response.LocationInfo
+import model.response.SportEvent
+import model.response.User
 import data.tables.events.EventsDao
 import data.tables.events_users.EventsUsersDao
 import data.tables.locations.LocationsDao

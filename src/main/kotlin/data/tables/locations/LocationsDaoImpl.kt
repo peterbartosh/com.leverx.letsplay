@@ -3,9 +3,9 @@ package data.tables.locations
 import data.tables.DatabaseFactory.dbQuery
 import data.tables.events.Events
 import data.tables.events.rowToEvent
-import data.model.entity.LocationInfoEntity
-import data.model.entity.SportEventEntity
-import data.model.request.SearchEventFilter
+import model.entity.LocationInfoEntity
+import model.entity.SportEventEntity
+import model.request.SearchEventFilter
 import data.utils.isNotNullOp
 import org.jetbrains.exposed.sql.*
 

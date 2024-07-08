@@ -1,4 +1,4 @@
-package data.model.request
+package model.request
 
 data class SearchEventFilter(
     val types: List<Int>? = null,

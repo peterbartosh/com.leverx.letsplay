@@ -1,4 +1,4 @@
-package data.model.basic
+package model.basic
 
 data class UserData(
     val name: String

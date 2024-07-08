@@ -2,8 +2,8 @@ package app.init
 
 import data.converter.convertSkills
 import data.tables.users.UsersDao
-import data.model.basic.Skill
-import data.model.entity.UserEntity
+import model.basic.Skill
+import model.entity.UserEntity
 
 suspend fun UsersDao.addSomeData() {
     this.addUser(

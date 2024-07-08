@@ -1,6 +1,6 @@
-package data.model.request
+package model.request
 
-import data.model.basic.Location
+import model.basic.Location
 
 data class LocationFilter(
     val locationRadiusKilometers: Float,
