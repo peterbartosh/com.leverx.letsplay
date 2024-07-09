@@ -6,7 +6,7 @@ import model.request.SearchEventFilter
 
 interface LocationsDao {
 
-    suspend fun addLocation(location: LocationInfoEntity)
+    suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean = false)
 
     suspend fun getLocationById(locationId: Long): LocationInfoEntity?
 

@@ -1,5 +1,8 @@
 package model.entity
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class SportEventEntity(
     val id: Long,
     val adminId: Long,

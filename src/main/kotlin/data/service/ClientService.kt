@@ -1,4 +1,4 @@
-package data.source
+package data.service
 
 import data.converter.toDto
 import model.entity.SportEventEntity
@@ -13,7 +13,7 @@ import data.tables.locations.LocationsDao
 import data.tables.users.UsersDao
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
-class RemoteSource(
+class ClientService(
     private val locationsDao: LocationsDao,
     private val usersDao: UsersDao,
     private val eventsUsersDao: EventsUsersDao,

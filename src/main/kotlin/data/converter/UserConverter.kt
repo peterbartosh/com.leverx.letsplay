@@ -5,7 +5,7 @@ import model.entity.UserEntity
 import model.response.User
 
 // skills - "02,25" == Skill(Basketball, 2), Skill(Football, 5)
-fun convertSkills(skills: String) = skills.split("," ).mapNotNull {
+fun convertSkills(skills: String?) = skills?.split("," )?.mapNotNull {
     try {
         val sportType = it.first().toString().toInt()
         val skillLevel = it.last().toString().toInt()
@@ -21,7 +21,7 @@ fun convertSkills(skills: List<Skill>) = skills.joinToString(",") {
 
 fun UserEntity.toDto() = User(
     id = id,
-    name = name,
+    name = username,
     age = age,
     rating = rating,
     skills = convertSkills(skills)

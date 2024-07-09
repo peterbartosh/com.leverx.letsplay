@@ -13,3 +13,4 @@ fun List<Op<Boolean>?>.foldAnd() = this
             acc.and(cur)
         }
     )
+

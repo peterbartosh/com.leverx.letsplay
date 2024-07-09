@@ -11,9 +11,11 @@ import org.jetbrains.exposed.sql.*
 
 class LocationsDaoImpl : LocationsDao {
 
-    override suspend fun addLocation(location: LocationInfoEntity) {
+    override suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean) {
         Locations.insert {
-            it[id] = location.id
+            if (copyId) {
+                it[id] = location.id
+            }
             it[city] = location.city
             it[address] = location.address
             it[country] = location.country

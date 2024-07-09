@@ -3,6 +3,7 @@ package data.tables
 import data.tables.events.Events
 import data.tables.events_users.EventsUsers
 import data.tables.locations.Locations
+import data.tables.tokens.Tokens
 import data.tables.users.Users
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
@@ -19,7 +20,7 @@ object DatabaseFactory {
             password = "peter_leverx5431"
         )
         transaction(database) {
-            SchemaUtils.create(Events, Locations, Users, EventsUsers)
+            SchemaUtils.create(Events, Locations, Users, EventsUsers, Tokens)
         }
     }
 

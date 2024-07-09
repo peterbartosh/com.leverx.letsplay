@@ -18,7 +18,8 @@ suspend fun EventsDao.addSomeData(){
             minParticipatorsAmount = 3,
             maxParticipatorsAmount = 10,
             skillLevel = 1
-        )
+        ),
+        copyId = true
     )
     this.createEvent(
         sportEventEntity = SportEventEntity(
@@ -32,7 +33,8 @@ suspend fun EventsDao.addSomeData(){
             minParticipatorsAmount = 1,
             maxParticipatorsAmount = 3,
             skillLevel = 4
-        )
+        ),
+        copyId = true
     )
     this.createEvent(
         sportEventEntity = SportEventEntity(
@@ -46,6 +48,7 @@ suspend fun EventsDao.addSomeData(){
             minParticipatorsAmount = 2,
             maxParticipatorsAmount = 5,
             skillLevel = 1
-        )
+        ),
+        copyId = true
     )
 }

@@ -6,6 +6,8 @@ import data.tables.events_users.EventsUsersDao
 import data.tables.events_users.EventsUsersDaoImpl
 import data.tables.locations.LocationsDao
 import data.tables.locations.LocationsDaoImpl
+import data.tables.tokens.TokensDao
+import data.tables.tokens.TokensDaoImpl
 import data.tables.users.UsersDao
 import data.tables.users.UsersDaoImpl
 import org.koin.dsl.module
@@ -16,4 +18,6 @@ val databaseModule = module {
     single<LocationsDao> { LocationsDaoImpl() }
     single<EventsDao> { EventsDaoImpl(eventsUsersDao = get()) }
     single<EventsUsersDao> { EventsUsersDaoImpl() }
+    single<TokensDao> { TokensDaoImpl() }
+
 }

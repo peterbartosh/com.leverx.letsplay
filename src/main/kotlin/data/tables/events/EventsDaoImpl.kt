@@ -62,10 +62,13 @@ class EventsDaoImpl(
     }
 
     override suspend fun createEvent(
-        sportEventEntity: SportEventEntity
+        sportEventEntity: SportEventEntity,
+        copyId: Boolean
     ) {
         val insertStatement = Events.insert {
-            it[id] = sportEventEntity.id
+            if (copyId) {
+                it[id] = sportEventEntity.id
+            }
             it[locationId] = sportEventEntity.locationId
             it[adminId] = sportEventEntity.adminId
             it[date] = sportEventEntity.date

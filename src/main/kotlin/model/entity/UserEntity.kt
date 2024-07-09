@@ -2,8 +2,10 @@ package model.entity
 
 data class UserEntity(
     val id: Long,
-    val name: String,
-    val age: Int,
-    val rating: Float,
-    val skills: String
+    val username: String,
+    val email: String,
+    val password: String,
+    val age: Int? = null,
+    val rating: Float? = null,
+    val skills: String? = null
 )

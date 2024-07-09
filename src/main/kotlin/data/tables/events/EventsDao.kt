@@ -9,7 +9,7 @@ interface EventsDao {
         searchEventFilter: SearchEventFilter?
     ): List<SportEventEntity>
 
-    suspend fun createEvent(sportEventEntity: SportEventEntity)
+    suspend fun createEvent(sportEventEntity: SportEventEntity, copyId: Boolean = false)
 
     suspend fun editEvent(
         sportEventId: Long,

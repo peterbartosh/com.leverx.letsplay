@@ -12,7 +12,8 @@ suspend fun LocationsDao.addSomeData(){
             address = "Lopatina 7",
             longitude = 27.6766,
             latitude = 53.95435
-        )
+        ),
+        copyId = true
     )
     this.addLocation(
         LocationInfoEntity(
@@ -22,7 +23,8 @@ suspend fun LocationsDao.addSomeData(){
             address = "Oginskogo 6",
             longitude = 27.67174,
             latitude = 53.92817
-        )
+        ),
+        copyId = true
     )
     this.addLocation(
         LocationInfoEntity(
@@ -32,6 +34,7 @@ suspend fun LocationsDao.addSomeData(){
             address = "Pionerskaya 3",
             longitude = 27.491230,
             latitude = 53.938370
-        )
+        ),
+        copyId = true
     )
 }

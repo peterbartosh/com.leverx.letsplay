@@ -5,5 +5,6 @@ import org.koin.core.component.inject
 
 class ServerApp : KoinComponent {
     private val api: Api by inject()
-    fun start(){ api.startEmbeddedServer() }
+    fun start() = api.startEmbeddedServer()
+
 }

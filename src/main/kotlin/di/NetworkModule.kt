@@ -3,12 +3,27 @@ package di
 import app.Api
 import app.init.InitDatabase
 import app.init.InitDatabaseImpl
-import data.source.RemoteSource
+import data.service.AuthService
+import data.service.ClientService
+import data.service.JwtService
+import io.ktor.server.application.*
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
+import kotlin.math.sin
 
 val networkModule = module {
     single {
-        RemoteSource(
+        JwtService()
+    }
+    single {
+        AuthService(
+            jwtService = get(),
+            tokensDao = get(),
+            usersDao = get()
+        )
+    }
+    single {
+        ClientService(
             locationsDao = get(),
             usersDao = get(),
             eventsUsersDao = get(),
@@ -20,8 +35,16 @@ val networkModule = module {
             usersDao = get(),
             locationsDao = get(),
             eventsDao = get(),
-            eventsUsersDao = get()
+            eventsUsersDao = get(),
+            tokensDao = get(),
+            jwtService = get()
         )
     }
-    single { Api(remoteSource = get(), initDatabase = get()) }
+    single {
+        Api(
+            clientService = get(),
+            authService = get(),
+            initDatabase = get()
+        )
+    }
 }
