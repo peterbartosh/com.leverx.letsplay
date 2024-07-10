@@ -5,16 +5,14 @@ import model.entity.UserEntity
 
 interface UsersDao {
 
-    suspend fun getUser(userId: Long): UserEntity?
+    suspend fun getUser(userId: Long): Result<UserEntity?>
 
-    suspend fun getUserByUsername(username: String): UserEntity?
+    suspend fun getUserByUsername(username: String): Result<UserEntity?>
 
-    suspend fun getUserByEmail(email: String): UserEntity?
+    suspend fun getUserByEmail(email: String): Result<UserEntity?>
 
-    suspend fun addUser(userEntity: UserEntity, copyId: Boolean = false): UserEntity?
+    suspend fun addUser(userEntity: UserEntity, copyId: Boolean = false): Result<UserEntity?>
 
-    suspend fun getUserByRefreshToken(refreshToken: DecodedJWT): UserEntity?
-
-    suspend fun clearAll()
+    suspend fun clearAll(): Result<Int>
 
 }

@@ -6,11 +6,15 @@ import model.entity.UserEntity
 
 interface TokensDao {
 
-    suspend fun getTokensByAccessToken(accessToken: String): TokensEntity?
+    suspend fun getTokensByAccessToken(accessToken: String): Result<TokensEntity?>
 
-    suspend fun addTokens(tokensEntity: TokensEntity): TokensEntity?
+    suspend fun getTokensByRefreshToken(refreshToken: String): Result<TokensEntity?>
 
-    suspend fun editTokens(tokensEntity: TokensEntity): TokensEntity?
+    suspend fun getTokensByUserId(userId: Long): Result<TokensEntity?>
 
-    suspend fun deleteTokens(userId: Long): Boolean
+    suspend fun addTokens(tokensEntity: TokensEntity): Result<TokensEntity?>
+
+    suspend fun editTokens(tokensEntity: TokensEntity): Result<TokensEntity?>
+
+    suspend fun deleteTokens(userId: Long): Result<Boolean>
 }

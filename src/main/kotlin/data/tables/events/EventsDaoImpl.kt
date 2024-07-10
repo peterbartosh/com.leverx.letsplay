@@ -15,24 +15,21 @@ class EventsDaoImpl(
 
     override suspend fun searchEvents(
         searchEventFilter: SearchEventFilter?
-    ): List<SportEventEntity> {
-        return dbQuery {
-            if (searchEventFilter == null) {
-                Events.selectAll().map(::rowToEvent)
-            } else if (searchEventFilter.locationFilter == null) {
+    ) = dbQuery {
+
+        if (searchEventFilter == null) {
+            Events.selectAll().map(::rowToEvent)
+        } else {
+            val query = if (searchEventFilter.locationFilter == null) {
+
                 val eventsFilter = Events.eventsFilter(searchEventFilter)
-                val query = if (eventsFilter.isNotNullOp()) {
+
+                if (eventsFilter.isNotNullOp()) {
                     Events.select { eventsFilter }
                 } else {
-                     Events.selectAll()
+                    Events.selectAll()
                 }
-                query.apply {
-                    searchEventFilter.limit?.let { limit ->
-                        searchEventFilter.skip?.let { skip ->
-                            limit(n = limit, offset = skip.toLong())
-                        } ?: limit(n = limit)
-                    }
-                }.map(::rowToEvent)
+
             } else {
                 val eventsFilter = Events.eventsFilter(searchEventFilter)
                 val locationsFilter = Locations.locationsFilters(searchEventFilter.locationFilter)
@@ -44,27 +41,26 @@ class EventsDaoImpl(
                     locationsFilter
                 } else Op.nullOp()
 
-                val query = if (finalFilter.isNotNullOp()) {
+                if (finalFilter.isNotNullOp()) {
                     Events.leftJoin(Locations).select { finalFilter }
                 } else {
                     Events.leftJoin(Locations).selectAll()
                 }
-
-                query.apply {
-                    searchEventFilter.limit?.let { limit ->
-                        searchEventFilter.skip?.let { skip ->
-                            limit(n = limit, offset = skip.toLong())
-                        } ?: limit(n = limit)
-                    }
-                }.map(::rowToEvent)
             }
+            query.apply {
+                searchEventFilter.limit?.let { limit ->
+                    searchEventFilter.skip?.let { skip ->
+                        limit(n = limit, offset = skip.toLong())
+                    } ?: limit(n = limit)
+                }
+            }.map(::rowToEvent)
         }
     }
 
     override suspend fun createEvent(
         sportEventEntity: SportEventEntity,
         copyId: Boolean
-    ) {
+    ) = dbQuery {
         val insertStatement = Events.insert {
             if (copyId) {
                 it[id] = sportEventEntity.id
@@ -90,7 +86,7 @@ class EventsDaoImpl(
     override suspend fun editEvent(
         sportEventId: Long,
         sportEventEntity: SportEventEntity?
-    ) {
+    ) = dbQuery {
         Events.update(
             where = { Events.id eq sportEventId }
         ) {
@@ -112,18 +108,16 @@ class EventsDaoImpl(
         }
     }
 
-    override suspend fun deleteEvent(eventId: Long) {
+    override suspend fun deleteEvent(eventId: Long) = dbQuery {
         Events.deleteWhere { id eq eventId }
     }
 
-    override suspend fun clearAll() {
+    override suspend fun clearAll() = dbQuery {
         Events.deleteAll()
     }
 }
 
-fun rowToEvent(
-    row: ResultRow
-) = SportEventEntity(
+fun rowToEvent(row: ResultRow) = SportEventEntity(
     id = row[Events.id],
     adminId = row[Events.adminId],
     locationId = row[Events.locationId],

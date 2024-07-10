@@ -8,10 +8,12 @@ import data.tables.users.Users
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
 object DatabaseFactory {
+
     fun init() {
         val database = Database.connect(
             url = "jdbc:postgresql://localhost:5432/letsplay",
@@ -24,6 +26,16 @@ object DatabaseFactory {
         }
     }
 
-    suspend fun <T> dbQuery(block: suspend () -> T): T =
-        newSuspendedTransaction(Dispatchers.IO) { block() }
+    suspend fun <T> dbQuery(block: suspend Transaction.() -> T): Result<T> =
+        newSuspendedTransaction(Dispatchers.IO) {
+            val result = runCatching {
+                block()
+            }
+            if (result.isFailure) {
+                this.rollback()
+                result.exceptionOrNull()?.printStackTrace()
+            }
+            return@newSuspendedTransaction result
+        }
+
 }

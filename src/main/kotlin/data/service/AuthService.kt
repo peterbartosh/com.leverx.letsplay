@@ -1,5 +1,6 @@
 package data.service
 
+import data.converter.toDto
 import data.tables.tokens.TokensDao
 import data.tables.users.UsersDao
 import data.utils.Utils
@@ -11,6 +12,7 @@ import model.entity.UserEntity
 import model.request.SignInRequest
 import model.request.SignUpRequest
 import model.response.LoginResponse
+import model.response.User
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class AuthService(
@@ -24,25 +26,32 @@ class AuthService(
 
         val isEmailProvided = Utils.isEmailValid(signInRequest.usernameOrEmail)
 
-        val foundUser = if (isEmailProvided) {
+        val foundUserResult = if (isEmailProvided) {
             val email = signInRequest.usernameOrEmail
             usersDao.getUserByEmail(email)
         } else {
             val username = signInRequest.usernameOrEmail
             usersDao.getUserByUsername(username)
-        } ?: return@newSuspendedTransaction Response.Error(
-            statusCode = HttpStatusCode.BadRequest,
-            message = "User not found"
-        )
+        }
+        val foundUser = foundUserResult.getOrNull()
 
-        if (foundUser.password == signInRequest.password) {
+        if (foundUserResult.isFailure || foundUser == null) {
+            this.rollback()
+            return@newSuspendedTransaction Response.Error(
+                statusCode = HttpStatusCode.BadRequest,
+                message = "User not found"
+            )
+        }
+
+        if (foundUser.password != signInRequest.password) {
+            this.rollback()
             return@newSuspendedTransaction Response.Error(
                 statusCode = HttpStatusCode.BadRequest,
                 message = "Password is incorrect"
             )
         }
 
-        val updatedTokens = tokensDao.editTokens(
+        val updatedTokensResult = tokensDao.editTokens(
             TokensEntity(
                 userId = foundUser.id,
                 accessToken = jwtService.createAccessToken(),
@@ -50,7 +59,15 @@ class AuthService(
                 accessTokenExpiresIn = jwtService.accessTokenExpiresIn(),
                 refreshTokenExpiresIn = jwtService.refreshTokenExpiresIn()
             )
-        ) ?: return@newSuspendedTransaction Response.Error(statusCode = HttpStatusCode.InternalServerError)
+        )
+        val updatedTokens = updatedTokensResult.getOrNull()
+
+        if (updatedTokensResult.isFailure || updatedTokens == null) {
+            this.rollback()
+            return@newSuspendedTransaction Response.Error(
+                statusCode = HttpStatusCode.InternalServerError
+            )
+        }
 
         return@newSuspendedTransaction Response.Data(
             body = LoginResponse(
@@ -63,52 +80,80 @@ class AuthService(
     }
 
     // new user
-    suspend fun signUp(signUpRequest: SignUpRequest): Response<LoginResponse> = newSuspendedTransaction {
-        val insertedUser = usersDao.addUser(
-            userEntity = UserEntity(
-                id = 0L,
-                username = signUpRequest.username,
-                password = signUpRequest.password,
-                email = signUpRequest.email,
-                age = signUpRequest.age
+    suspend fun signUp(signUpRequest: SignUpRequest): Response<LoginResponse> =
+        newSuspendedTransaction {
+            val insertedUserResult = usersDao.addUser(
+                userEntity = UserEntity(
+                    id = 0L,
+                    username = signUpRequest.username,
+                    password = signUpRequest.password,
+                    email = signUpRequest.email,
+                    age = signUpRequest.age
+                )
             )
-        ) ?: return@newSuspendedTransaction Response.Error(
-            statusCode = HttpStatusCode.BadRequest,
-            message = "Credentials are used"
-        )
-        println("2")
+            val insertedUser = insertedUserResult.getOrNull()
 
-        val insertedUsersCred = tokensDao.addTokens(
-            tokensEntity = TokensEntity(
-                userId = insertedUser.id,
-                accessToken = jwtService.createAccessToken(),
-                refreshToken = jwtService.createRefreshToken(),
-                accessTokenExpiresIn = jwtService.accessTokenExpiresIn(),
-                refreshTokenExpiresIn = jwtService.refreshTokenExpiresIn()
-            )
-        ) ?: return@newSuspendedTransaction Response.Error(statusCode = HttpStatusCode.InternalServerError)
-        println("3")
+            if (insertedUserResult.isFailure || insertedUser == null) {
+                this.rollback()
+                return@newSuspendedTransaction Response.Error(
+                    statusCode = HttpStatusCode.BadRequest,
+                    message = "Credentials are used"
+                )
+            }
 
-        return@newSuspendedTransaction Response.Data(
-            body = LoginResponse(
-                accessToken = insertedUsersCred.accessToken,
-                refreshToken = insertedUsersCred.refreshToken,
-                accessTokenExpiresIn = insertedUsersCred.accessTokenExpiresIn,
-                refreshTokenExpiresIn = insertedUsersCred.refreshTokenExpiresIn
+            val insertedUsersTokensResult = tokensDao.addTokens(
+                tokensEntity = TokensEntity(
+                    userId = insertedUser.id,
+                    accessToken = jwtService.createAccessToken(),
+                    refreshToken = jwtService.createRefreshToken(),
+                    accessTokenExpiresIn = jwtService.accessTokenExpiresIn(),
+                    refreshTokenExpiresIn = jwtService.refreshTokenExpiresIn()
+                )
             )
-        )
+            val insertedUsersTokens = insertedUsersTokensResult.getOrNull()
+
+            if (insertedUsersTokensResult.isFailure || insertedUsersTokens == null) {
+                this.rollback()
+                return@newSuspendedTransaction Response.Error(
+                    statusCode = HttpStatusCode.InternalServerError
+                )
+            }
+
+            return@newSuspendedTransaction Response.Data(
+                body = LoginResponse(
+                    accessToken = insertedUsersTokens.accessToken,
+                    refreshToken = insertedUsersTokens.refreshToken,
+                    accessTokenExpiresIn = insertedUsersTokens.accessTokenExpiresIn,
+                    refreshTokenExpiresIn = insertedUsersTokens.refreshTokenExpiresIn
+                )
+            )
+        }
+
+    suspend fun logout(accessToken: String): Response<Any> {
+        val foundUserTokenResult = tokensDao.getTokensByAccessToken(accessToken)
+        val foundUserToken = foundUserTokenResult.getOrNull()
+        if (foundUserTokenResult.isFailure || foundUserToken == null) {
+            return Response.Error(
+                statusCode = HttpStatusCode.Unauthorized
+            )
+        }
+        val deleteResult = tokensDao.deleteTokens(foundUserToken.userId)
+        if (deleteResult.isFailure || deleteResult.getOrNull() == null) {
+            return Response.Error(
+                statusCode = HttpStatusCode.InternalServerError
+            )
+        }
+        return Response.Data(body = Any())
     }
 
-    suspend fun logout(accessToken: String): Boolean {
-        return tokensDao.getTokensByAccessToken(accessToken)?.let { foundUserToken ->
-            tokensDao.deleteTokens(foundUserToken.userId)
-        } ?: false
-    }
+    suspend fun validateAccessToken(credential: BearerTokenCredential): Principal? {
+        val tokensResult = tokensDao.getTokensByAccessToken(credential.token)
+        val tokens = tokensResult.getOrNull()
 
-    suspend fun validateAccessToken(
-        credential: BearerTokenCredential,
-    ): Principal? {
-        val tokens = tokensDao.getTokensByAccessToken(credential.token) ?: return null
+        if (tokensResult.isFailure || tokens == null) {
+            return null
+        }
+
         val accessTokenIsExpired = System.currentTimeMillis() >= tokens.accessTokenExpiresIn
 
         return if (accessTokenIsExpired) {
@@ -118,11 +163,16 @@ class AuthService(
         }
     }
 
-    suspend fun refreshToken(oldAccessToken: String): Response<LoginResponse> {
-        val tokens = tokensDao.getTokensByAccessToken(oldAccessToken) ?: return Response.Error(
-            statusCode = HttpStatusCode.BadRequest,
-            message = "Not found"
-        )
+    suspend fun refreshToken(refreshToken: String): Response<LoginResponse> {
+        val tokensResult = tokensDao.getTokensByAccessToken(refreshToken)
+        val tokens = tokensResult.getOrNull()
+
+        if (tokensResult.isFailure || tokens == null) {
+            return Response.Error(
+                statusCode = HttpStatusCode.BadRequest,
+                message = "Not found"
+            )
+        }
 
         val refreshTokenIsExpired = System.currentTimeMillis() >= tokens.refreshTokenExpiresIn
 
@@ -133,7 +183,12 @@ class AuthService(
                 accessToken = jwtService.createAccessToken(),
                 accessTokenExpiresIn = jwtService.accessTokenExpiresIn()
             )
-            tokensDao.editTokens(tokensEntity = tokensEntity)?.let { updatedTokens ->
+            val updatedTokensResult = tokensDao.editTokens(tokensEntity = tokensEntity)
+            val updatedTokens = updatedTokensResult.getOrNull()
+
+            if (updatedTokensResult.isFailure || updatedTokens == null) {
+                Response.Error(statusCode = HttpStatusCode.InternalServerError)
+            } else {
                 Response.Data(
                     body = LoginResponse(
                         accessToken = updatedTokens.accessToken,
@@ -142,8 +197,28 @@ class AuthService(
                         refreshTokenExpiresIn = updatedTokens.refreshTokenExpiresIn
                     )
                 )
-            } ?:Response.Error(statusCode = HttpStatusCode.InternalServerError)
+            }
         }
+    }
+
+    suspend fun getUser(accessToken: String): Response<User> = newSuspendedTransaction {
+        val tokensResult = tokensDao.getTokensByAccessToken(accessToken)
+        val tokens = tokensResult.getOrNull()
+
+        if (tokensResult.isFailure || tokens == null) {
+            this.rollback()
+            return@newSuspendedTransaction Response.Error(statusCode = HttpStatusCode.Unauthorized)
+        }
+        val userResult = usersDao.getUser(tokens.userId)
+        val user = userResult.getOrNull()
+
+        if (userResult.isFailure || user == null) {
+            this.rollback()
+            return@newSuspendedTransaction Response.Error(statusCode = HttpStatusCode.NotFound)
+        }
+        return@newSuspendedTransaction Response.Data(
+            body = user.toDto()
+        )
     }
 
 }

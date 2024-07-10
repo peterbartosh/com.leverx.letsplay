@@ -8,18 +8,18 @@ interface EventsUsersDao {
         userId: Long,
         eventId: Long,
         isAdmin: Boolean
-    ): Boolean
+    ): Result<Boolean>
 
     suspend fun getByEventId(
         eventId: Long
-    ): List<EventUserEntity>
+    ): Result<List<EventUserEntity>>
 
     suspend fun getAdmin(
         eventId: Long
-    ): EventUserEntity?
+    ): Result<EventUserEntity?>
 
     suspend fun getByUserId(
         userId: Long
-    ): List<EventUserEntity>
+    ): Result<List<EventUserEntity>>
 
 }

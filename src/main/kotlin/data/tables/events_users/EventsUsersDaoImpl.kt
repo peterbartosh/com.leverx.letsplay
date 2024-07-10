@@ -14,7 +14,7 @@ class EventsUsersDaoImpl : EventsUsersDao {
         userId: Long,
         eventId: Long,
         isAdmin: Boolean
-    ): Boolean {
+    ) = dbQuery {
         val isNotDuplicate = EventsUsers.select {
             EventsUsers.userId.eq(userId).and(EventsUsers.eventId.eq(eventId))
         }.toList().isEmpty()
@@ -34,22 +34,22 @@ class EventsUsersDaoImpl : EventsUsersDao {
                 it[EventsUsers.isAdmin] = isAdmin
             }
         }
-        return isNotDuplicate && !alreadyHasAdmin
+        isNotDuplicate && !alreadyHasAdmin
     }
 
-    override suspend fun getByEventId(eventId: Long): List<EventUserEntity> = dbQuery {
+    override suspend fun getByEventId(eventId: Long) = dbQuery {
         EventsUsers.select {
             EventsUsers.eventId eq eventId
         }.map(::rowToEventUser)
     }
 
-    override suspend fun getByUserId(userId: Long): List<EventUserEntity> = dbQuery {
+    override suspend fun getByUserId(userId: Long) = dbQuery {
         EventsUsers.select {
             EventsUsers.userId eq userId
         }.map(::rowToEventUser)
     }
 
-    override suspend fun getAdmin(eventId: Long): EventUserEntity? = dbQuery {
+    override suspend fun getAdmin(eventId: Long) = dbQuery {
         EventsUsers.select {
             EventsUsers.eventId.eq(eventId).and(EventsUsers.isAdmin.eq(true))
         }.map(::rowToEventUser).singleOrNull()

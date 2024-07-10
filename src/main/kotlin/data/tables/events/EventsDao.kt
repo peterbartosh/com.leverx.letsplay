@@ -7,16 +7,19 @@ interface EventsDao {
 
     suspend fun searchEvents(
         searchEventFilter: SearchEventFilter?
-    ): List<SportEventEntity>
+    ): Result<List<SportEventEntity>>
 
-    suspend fun createEvent(sportEventEntity: SportEventEntity, copyId: Boolean = false)
+    suspend fun createEvent(
+        sportEventEntity: SportEventEntity,
+        copyId: Boolean = false
+    ): Result<SportEventEntity?>
 
     suspend fun editEvent(
         sportEventId: Long,
         sportEventEntity: SportEventEntity? = null
-    )
+    ): Result<Int>
 
-    suspend fun deleteEvent(eventId: Long)
+    suspend fun deleteEvent(eventId: Long): Result<Int>
 
-    suspend fun clearAll()
+    suspend fun clearAll(): Result<Int>
 }

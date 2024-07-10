@@ -5,9 +5,11 @@ import data.tables.DatabaseFactory.dbQuery
 import data.tables.tokens.Tokens
 import data.tables.tokens.rowToTokens
 import model.entity.UserEntity
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.deleteAll
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.postgresql.util.PSQLException
 
 class UsersDaoImpl : UsersDao {
 
@@ -17,53 +19,36 @@ class UsersDaoImpl : UsersDao {
         }.map(::rowToUser).singleOrNull()
     }
 
-    override suspend fun getUserByUsername(username: String): UserEntity? = dbQuery {
+    override suspend fun getUserByUsername(username: String) = dbQuery {
         Users.select { Users.username eq username }.map(::rowToUser).singleOrNull()
     }
 
-    override suspend fun getUserByEmail(email: String): UserEntity? = dbQuery {
+    override suspend fun getUserByEmail(email: String) = dbQuery {
         Users.select { Users.email eq email }.map(::rowToUser).singleOrNull()
     }
 
-    override suspend fun getUserByRefreshToken(refreshToken: DecodedJWT): UserEntity? {
-        return Tokens
-            .select {
-                Tokens.refreshToken.eq(refreshToken.token)
-            }.map(::rowToTokens).singleOrNull()?.let { tokens ->
-                Users.select {
-                    Users.id.eq(tokens.userId)
-                }.map(::rowToUser).singleOrNull()
+    override suspend fun addUser(userEntity: UserEntity, copyId: Boolean) = dbQuery {
+        Users.insert {
+            if (copyId) {
+                it[id] = userEntity.id
             }
-    }
-
-    override suspend fun addUser(userEntity: UserEntity, copyId: Boolean): UserEntity? {
-        println("1111111111111111111")
-        return try {
-            newSuspendedTransaction {
-                Users.insert {
-                    if (copyId) {
-                        it[id] = userEntity.id
-                    }
-                    it[age] = userEntity.age
-                    it[username] = userEntity.username
-                    it[email] = userEntity.email
-                    it[password] = userEntity.password
-                    it[rating] = userEntity.rating
-                    it[skills] = userEntity.skills
-                }
-                println("222222222222222222222")
-                val foundUsers = Users.select { Users.username.eq(userEntity.username) }.map(::rowToUser)
-                println("33333333333333333333333")
-                if (foundUsers.size == 1) {
-                    foundUsers.first()
-                } else null
-            }
-        } catch (e: Exception) {
-            null
+            it[age] = userEntity.age
+            it[username] = userEntity.username
+            it[email] = userEntity.email
+            it[password] = userEntity.password
+            it[rating] = userEntity.rating
+            it[skills] = userEntity.skills
         }
+
+        val foundUsers = Users.select { Users.username.eq(userEntity.username) }.map(::rowToUser)
+
+        if (foundUsers.size == 1) {
+            foundUsers.first()
+        } else null
     }
 
-    override suspend fun clearAll() {
+
+    override suspend fun clearAll() = dbQuery {
         Users.deleteAll()
     }
 

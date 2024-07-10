@@ -6,17 +6,13 @@ import model.request.SearchEventFilter
 
 interface LocationsDao {
 
-    suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean = false)
+    suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean = false): Result<LocationInfoEntity?>
 
-    suspend fun getLocationById(locationId: Long): LocationInfoEntity?
+    suspend fun getLocationById(locationId: Long): Result<LocationInfoEntity?>
 
-    suspend fun getSportLocations(
-        searchEventFilter: SearchEventFilter
-    ): List<LocationInfoEntity>
+    suspend fun getSportLocations(searchEventFilter: SearchEventFilter): Result<List<LocationInfoEntity>>
 
-    suspend fun getLocationBookings(
-        locationId: Long
-    ): List<SportEventEntity>
+    suspend fun getLocationEvents(locationId: Long): Result<List<SportEventEntity>>
 
-    suspend fun clearAll()
+    suspend fun clearAll(): Result<Int>
 }

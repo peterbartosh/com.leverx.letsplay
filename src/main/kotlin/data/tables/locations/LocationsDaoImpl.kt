@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.*
 
 class LocationsDaoImpl : LocationsDao {
 
-    override suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean) {
+    override suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean) = dbQuery {
         Locations.insert {
             if (copyId) {
                 it[id] = location.id
@@ -21,18 +21,16 @@ class LocationsDaoImpl : LocationsDao {
             it[country] = location.country
             it[latitude] = location.latitude
             it[longitude] = location.longitude
-        }
+        }.resultedValues?.map(::rowToLocationInfo)?.singleOrNull()
     }
 
-    override suspend fun getLocationById(locationId: Long): LocationInfoEntity? = dbQuery {
+    override suspend fun getLocationById(locationId: Long) = dbQuery {
         Locations.select {
             Locations.id eq locationId
         }.map(::rowToLocationInfo).singleOrNull()
     }
 
-    override suspend fun getSportLocations(
-        searchEventFilter: SearchEventFilter
-    ): List<LocationInfoEntity> = dbQuery {
+    override suspend fun getSportLocations(searchEventFilter: SearchEventFilter) = dbQuery {
 
         val distanceFilter = searchEventFilter.locationFilter?.let {
             Locations.locationsFilters(it)
@@ -63,15 +61,13 @@ class LocationsDaoImpl : LocationsDao {
         query.map(::rowToLocationInfo)
     }
 
-    override suspend fun getLocationBookings(
-        locationId: Long
-    ): List<SportEventEntity> = dbQuery {
+    override suspend fun getLocationEvents(locationId: Long) = dbQuery {
         Events.select {
             Events.id.eq(locationId)
         }.map(::rowToEvent)
     }
 
-    override suspend fun clearAll() {
+    override suspend fun clearAll() = dbQuery {
         Locations.deleteAll()
     }
 

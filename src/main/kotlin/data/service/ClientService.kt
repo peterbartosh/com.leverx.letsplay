@@ -12,6 +12,8 @@ import data.tables.events_users.EventsUsersDao
 import data.tables.locations.LocationsDao
 import data.tables.users.UsersDao
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.postgresql.util.PSQLException
+import org.postgresql.util.PSQLState
 
 class ClientService(
     private val locationsDao: LocationsDao,
@@ -20,8 +22,8 @@ class ClientService(
     private val eventsDao: EventsDao
 ) {
 
-    suspend fun createEvent(sportEventEntity: SportEventEntity){
-        return eventsDao.createEvent(
+    suspend fun createEvent(sportEventEntity: SportEventEntity) {
+        eventsDao.createEvent(
             sportEventEntity = sportEventEntity
         )
     }
@@ -29,29 +31,45 @@ class ClientService(
     suspend fun searchEvents(
         searchEventFilter: SearchEventFilter?
     ): List<SportEvent> {
-        return newSuspendedTransaction {
-            eventsDao.searchEvents(
-                searchEventFilter = searchEventFilter
-            ).mapNotNull { event ->
-                val admin = eventsUsersDao.getAdmin(eventId = event.id)?.userId?.let { userId ->
-                    usersDao.getUser(userId = userId)?.toDto()
-                }
-                val participators = eventsUsersDao.getByEventId(eventId = event.id).map { eventUser ->
-                    usersDao.getUser(userId = eventUser.userId)?.toDto()
-                }
-                val locationInfo = locationsDao.getLocationById(locationId = event.locationId)?.toDto()
 
-                if (admin == null || participators.filterNotNull().isEmpty() || locationInfo == null) {
-                    null
-                } else {
-                    event.toDto(
-                        admin = admin,
-                        participators = participators.filterNotNull(),
-                        locationData = locationInfo
-                    )
+        return eventsDao.searchEvents(searchEventFilter = searchEventFilter).getOrNull()?.mapNotNull { event ->
+            newSuspendedTransaction {
+
+                val admin = eventsUsersDao.getAdmin(eventId = event.id)
+                    .getOrNull()?.userId?.let { userId ->
+                        usersDao.getUser(userId = userId).getOrNull()?.toDto()
+                    }
+
+                if (admin == null) {
+                    this.rollback()
+                    return@newSuspendedTransaction null
                 }
+
+                val participators = eventsUsersDao.getByEventId(eventId = event.id)
+                    .getOrNull()?.map { eventUser ->
+                        usersDao.getUser(userId = eventUser.userId).getOrNull()?.toDto()
+                    }
+
+                if (participators == null) {
+                    this.rollback()
+                    return@newSuspendedTransaction null
+                }
+
+                val locationInfo = locationsDao.getLocationById(locationId = event.locationId)
+                    .getOrNull()?.toDto()
+
+                if (locationInfo == null) {
+                    this.rollback()
+                    return@newSuspendedTransaction null
+                }
+
+                event.toDto(
+                    admin = admin,
+                    participators = participators.filterNotNull(),
+                    locationData = locationInfo
+                )
             }
-        }
+        } ?: emptyList()
     }
 
     suspend fun subscribeUserToEvent(
@@ -63,25 +81,24 @@ class ClientService(
             eventId = eventId,
             userId = userId,
             isAdmin = isAdmin
-        )
+        ).getOrNull() == true
     }
 
     suspend fun getSportLocations(searchEventFilter: SearchEventFilter): List<LocationInfo> {
-        return locationsDao.getSportLocations(searchEventFilter).map { it.toDto() }
+        return locationsDao.getSportLocations(searchEventFilter).getOrNull()?.map { it.toDto() } ?: emptyList()
     }
 
     suspend fun getLocationBookings(locationId: Long): List<Booking> {
-        return locationsDao
-            .getLocationBookings(locationId = locationId).map {
-                Booking(
-                    dateAndTime = it.date + it.startTimeMinutes.toLong() * 60 * 1000,
-                    durationMinutes = it.endTimeMinutes - it.startTimeMinutes
-                )
-            }
+        return locationsDao.getLocationEvents(locationId = locationId).getOrNull()?.map {
+            Booking(
+                dateAndTime = it.date + it.startTimeMinutes.toLong() * 60 * 1000,
+                durationMinutes = it.endTimeMinutes - it.startTimeMinutes
+            )
+        } ?: emptyList()
     }
 
     suspend fun getUser(userId: Long): User? {
-        return usersDao.getUser(userId)?.toDto()
+        return usersDao.getUser(userId).getOrNull()?.toDto()
     }
 
 }
