@@ -5,13 +5,19 @@ import model.entity.SportEventEntity
 
 interface EventsDao {
 
+    suspend fun getRemainingEventsAmount(userId: Long): Result<Int>
+
+    suspend fun getEventById(eventId: Long): Result<SportEventEntity?>
+
+    suspend fun getUserEvents(userId: Long): Result<List<SportEventEntity>>
+
     suspend fun searchEvents(
         searchEventFilter: SearchEventFilter?
     ): Result<List<SportEventEntity>>
 
     suspend fun createEvent(
         sportEventEntity: SportEventEntity,
-        copyId: Boolean = false
+        adminId: Long
     ): Result<SportEventEntity?>
 
     suspend fun editEvent(

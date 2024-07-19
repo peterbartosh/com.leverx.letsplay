@@ -7,22 +7,20 @@ import data.utils.foldAnd
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
 import org.jetbrains.exposed.sql.Table
+
+val eventsAutoIncSeqName = "event_id_seq"
 
 object Events : Table() {
 
-    val id = long("id").autoIncrement()
+    val id = long("id").autoIncrement(eventsAutoIncSeqName)
     val locationId = reference(
         name = "location_id",
         refColumn = Locations.id,
-        onDelete = ReferenceOption.NO_ACTION,
-        onUpdate = ReferenceOption.NO_ACTION
-    )
-    val adminId = reference(
-        name = "user_id",
-        refColumn = Users.id,
         onDelete = ReferenceOption.NO_ACTION,
         onUpdate = ReferenceOption.NO_ACTION
     )
@@ -40,28 +38,28 @@ object Events : Table() {
         searchEventFilter: SearchEventFilter
     ): Op<Boolean> {
         val minParticipantsAmountFilter: Op<Boolean>? = searchEventFilter.minParticipatorsAmount?.let { min ->
-            Events.minParticipatorsAmount.greater(min)
+            minParticipatorsAmount.greaterEq(min)
         }
         val maxParticipantsAmountFilter = searchEventFilter.maxParticipatorsAmount?.let { max ->
-            Events.maxParticipatorsAmount.less(max)
+            maxParticipatorsAmount.lessEq(max)
         }
         val sportTypesFilter = searchEventFilter.types?.ifEmpty { null }?.let { sportTypes ->
-            Events.sportType.inList(sportTypes)
+            sportType.inList(sportTypes)
         }
         val skillLevelsFilter = searchEventFilter.skillLevels?.ifEmpty { null }?.let { skillLevels ->
-            Events.skillLevel.inList(skillLevels)
+            skillLevel.inList(skillLevels)
         }
         val startDateFilter = searchEventFilter.startDate?.let { startDate ->
-            Events.date.less(startDate)
+            date.lessEq(startDate)
         }
         val endDateFilter = searchEventFilter.endDate?.let { endDate ->
-            Events.date.greater(endDate)
+            date.greaterEq(endDate)
         }
         val startTimeFilter = searchEventFilter.startTime?.let { startTime ->
-            Events.startTimeMinutes.less(startTime)
+            startTimeMinutes.lessEq(startTime)
         }
         val endTimeFilter = searchEventFilter.endTime?.let { endTime ->
-            Events.endTimeMinutes.greater(endTime)
+            endTimeMinutes.greaterEq(endTime)
         }
         return listOf(
             minParticipantsAmountFilter,

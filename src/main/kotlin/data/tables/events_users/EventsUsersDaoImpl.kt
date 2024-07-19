@@ -2,11 +2,8 @@ package data.tables.events_users
 
 import data.tables.DatabaseFactory.dbQuery
 import model.entity.EventUserEntity
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
 
 class EventsUsersDaoImpl : EventsUsersDao {
 
@@ -47,6 +44,10 @@ class EventsUsersDaoImpl : EventsUsersDao {
         EventsUsers.select {
             EventsUsers.userId eq userId
         }.map(::rowToEventUser)
+    }
+
+    override suspend fun clearAll(): Result<Boolean> = dbQuery {
+        EventsUsers.deleteAll() == 1
     }
 
     override suspend fun getAdmin(eventId: Long) = dbQuery {

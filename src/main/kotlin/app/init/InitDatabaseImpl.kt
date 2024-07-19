@@ -1,30 +1,53 @@
 package app.init
 
+import data.service.AuthService
+import data.service.ClientService
 import data.service.JwtService
 import data.tables.DatabaseFactory
 import data.tables.events.Events
 import data.tables.events.EventsDao
+import data.tables.events.eventsAutoIncSeqName
 import data.tables.events_users.EventsUsers
 import data.tables.events_users.EventsUsersDao
+import data.tables.events_users.eventsUsersAutoIncSeqName
 import data.tables.locations.Locations
 import data.tables.locations.LocationsDao
 import data.tables.tokens.Tokens
 import data.tables.tokens.TokensDao
 import data.tables.users.Users
 import data.tables.users.UsersDao
+import data.tables.users.usersAutoIncSeqName
 import kotlinx.coroutines.*
+import model.request.SignUpRequest
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.koin.core.component.KoinComponent
 
 class InitDatabaseImpl(
-    private val jwtService: JwtService,
     private val usersDao: UsersDao,
     private val locationsDao: LocationsDao,
     private val eventsDao: EventsDao,
     private val eventsUsersDao: EventsUsersDao,
-    private val tokensDao: TokensDao
+    private val tokensDao: TokensDao,
+    private val clientService: ClientService,
+    private val authService: AuthService
 ) : InitDatabase, KoinComponent {
+
+    private suspend fun resetAutoIncSequences() = newSuspendedTransaction {
+
+        val minValue = 1
+        val connection = TransactionManager.current().connection
+        connection.executeInBatch(
+            listOf(
+                "ALTER SEQUENCE $eventsAutoIncSeqName RESTART WITH $minValue",
+                "ALTER SEQUENCE $eventsUsersAutoIncSeqName RESTART WITH $minValue",
+                "ALTER SEQUENCE $usersAutoIncSeqName RESTART WITH $minValue",
+            )
+        )
+
+    }
 
     override operator fun invoke(
         addDefaultData: Boolean,
@@ -43,35 +66,38 @@ class InitDatabaseImpl(
                 if (clearExistingData) {
                     launch(coroutineContext) {
                         newSuspendedTransaction {
-//                            Tokens.dropStatement()
-//                            EventsUsers.dropStatement()
-//
-//                            Locations.dropStatement()
-//                            Users.dropStatement()
-//                            Events.dropStatement()
-
-//                            eventsDao.clearAll()
-//                            usersDao.clearAll()
-//                            locationsDao.clearAll()
+                            launch {
+                                tokensDao.clearAll()
+                            }.join()
+                            launch {
+                                eventsDao.clearAll()
+                            }.join()
+                            launch {
+                                eventsUsersDao.clearAll()
+                            }.join()
+                            launch {
+                                usersDao.clearAll()
+                            }.join()
+                            launch {
+                                locationsDao.clearAll()
+                            }.join()
                         }
                     }.join()
                 }
 
                 launch(coroutineContext) {
                     newSuspendedTransaction {
-                        usersDao.addSomeData()
-                        locationsDao.addSomeData()
+                        launch {
+                            resetAutoIncSequences()
+                        }.join()
+                        launch {
+                            authService.addSomeData()
+                        }.join()
+                        launch {
+                            clientService.addSomeData()
+                        }.join()
                     }
                 }.join()
-
-                launch(coroutineContext) {
-                    newSuspendedTransaction {
-                        eventsDao.addSomeData()
-                        eventsUsersDao.addSomeData()
-                        tokensDao.addSomeData(jwtService)
-                    }
-                }.join()
-
             }
         }
     }

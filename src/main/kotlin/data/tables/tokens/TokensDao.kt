@@ -17,4 +17,6 @@ interface TokensDao {
     suspend fun editTokens(tokensEntity: TokensEntity): Result<TokensEntity?>
 
     suspend fun deleteTokens(userId: Long): Result<Boolean>
+
+    suspend fun clearAll(): Result<Boolean>
 }

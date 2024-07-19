@@ -22,4 +22,6 @@ interface EventsUsersDao {
         userId: Long
     ): Result<List<EventUserEntity>>
 
+    suspend fun clearAll(): Result<Boolean>
+
 }

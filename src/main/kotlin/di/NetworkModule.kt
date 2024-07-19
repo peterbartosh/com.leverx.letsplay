@@ -37,7 +37,8 @@ val networkModule = module {
             eventsDao = get(),
             eventsUsersDao = get(),
             tokensDao = get(),
-            jwtService = get()
+            authService = get(),
+            clientService = get()
         )
     }
     single {

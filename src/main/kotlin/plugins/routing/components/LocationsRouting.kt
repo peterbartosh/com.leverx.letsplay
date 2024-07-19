@@ -9,6 +9,7 @@ import model.basic.Location
 import model.request.LocationFilter
 import model.request.SearchEventFilter
 import plugins.routing.Routes
+import plugins.routing.respondToCall
 
 
 fun Application.configureLocationsRouting(
@@ -63,13 +64,8 @@ fun Application.configureLocationsRouting(
                     limit = limit
                 )
 
-                val result = clientService.getSportLocations(searchEventFilter = searchEventFilter)
-                if (result.isEmpty()) {
-                    call.respond("Failure. Empty result.")
-                } else {
-                    call.respond(result)
-                }
-
+                val response = clientService.getSportLocations(searchEventFilter = searchEventFilter)
+                call.respondToCall(response)
             }
         }
 
@@ -79,12 +75,8 @@ fun Application.configureLocationsRouting(
                 if (locationId == null) {
                     call.respond("Failure. Location not found")
                 } else {
-                    val result = clientService.getLocationBookings(locationId = locationId)
-                    if (result.isEmpty()) {
-                        call.respond("Failure. Empty result.")
-                    } else {
-                        call.respond(result)
-                    }
+                    val response = clientService.getLocationBookings(locationId = locationId)
+                    call.respondToCall(response)
                 }
             }
         }

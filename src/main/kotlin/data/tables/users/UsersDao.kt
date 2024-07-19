@@ -1,6 +1,5 @@
 package data.tables.users
 
-import com.auth0.jwt.interfaces.DecodedJWT
 import model.entity.UserEntity
 
 interface UsersDao {
@@ -11,7 +10,7 @@ interface UsersDao {
 
     suspend fun getUserByEmail(email: String): Result<UserEntity?>
 
-    suspend fun addUser(userEntity: UserEntity, copyId: Boolean = false): Result<UserEntity?>
+    suspend fun addUser(userEntity: UserEntity): Result<UserEntity?>
 
     suspend fun clearAll(): Result<Int>
 

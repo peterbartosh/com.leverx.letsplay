@@ -6,9 +6,12 @@ import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 import java.sql.Ref
 
+val eventsUsersAutoIncSeqName = "event_users_id_seq"
+
+
 object EventsUsers : Table() {
 
-    val id = long("id").autoIncrement()
+    val id = long("id").autoIncrement(eventsUsersAutoIncSeqName)
     val eventId = reference(
         name = "event_id",
         refColumn = Events.id,

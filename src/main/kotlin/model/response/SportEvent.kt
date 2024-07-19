@@ -10,7 +10,7 @@ data class SportEvent(
     val date: Long,
     val startTimeMinutes: Int,
     val endTimeMinutes: Int,
-    val participators: List<User> = emptyList(),
+    val participators: List<User>,
     val minParticipatorsAmount: Int?,
     val maxParticipatorsAmount: Int?,
     val skillLevel: Int?

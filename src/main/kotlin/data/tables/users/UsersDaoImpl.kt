@@ -1,15 +1,11 @@
 package data.tables.users
 
-import com.auth0.jwt.interfaces.DecodedJWT
 import data.tables.DatabaseFactory.dbQuery
-import data.tables.tokens.Tokens
-import data.tables.tokens.rowToTokens
 import model.entity.UserEntity
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 
 class UsersDaoImpl : UsersDao {
 
@@ -27,24 +23,15 @@ class UsersDaoImpl : UsersDao {
         Users.select { Users.email eq email }.map(::rowToUser).singleOrNull()
     }
 
-    override suspend fun addUser(userEntity: UserEntity, copyId: Boolean) = dbQuery {
+    override suspend fun addUser(userEntity: UserEntity) = dbQuery {
         Users.insert {
-            if (copyId) {
-                it[id] = userEntity.id
-            }
             it[age] = userEntity.age
             it[username] = userEntity.username
             it[email] = userEntity.email
             it[password] = userEntity.password
             it[rating] = userEntity.rating
             it[skills] = userEntity.skills
-        }
-
-        val foundUsers = Users.select { Users.username.eq(userEntity.username) }.map(::rowToUser)
-
-        if (foundUsers.size == 1) {
-            foundUsers.first()
-        } else null
+        }.resultedValues?.map(::rowToUser)?.singleOrNull()
     }
 
 

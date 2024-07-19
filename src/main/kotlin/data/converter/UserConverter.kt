@@ -21,7 +21,8 @@ fun convertSkills(skills: List<Skill>) = skills.joinToString(",") {
 
 fun UserEntity.toDto() = User(
     id = id,
-    name = username,
+    username = username,
+    email = email,
     age = age,
     rating = rating,
     skills = convertSkills(skills)

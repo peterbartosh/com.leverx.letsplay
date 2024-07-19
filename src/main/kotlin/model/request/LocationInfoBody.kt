@@ -1,10 +1,10 @@
-package model.response
+package model.request
 
-import model.basic.Location
 import kotlinx.serialization.Serializable
+import model.basic.Location
 
 @Serializable
-data class LocationInfo(
+data class LocationInfoBody(
     val id: String,
     val country: String,
     val city: String,

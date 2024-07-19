@@ -11,11 +11,9 @@ import org.jetbrains.exposed.sql.*
 
 class LocationsDaoImpl : LocationsDao {
 
-    override suspend fun addLocation(location: LocationInfoEntity, copyId: Boolean) = dbQuery {
+    override suspend fun addLocation(location: LocationInfoEntity) = dbQuery {
         Locations.insert {
-            if (copyId) {
-                it[id] = location.id
-            }
+            it[id] = location.id
             it[city] = location.city
             it[address] = location.address
             it[country] = location.country
@@ -24,7 +22,7 @@ class LocationsDaoImpl : LocationsDao {
         }.resultedValues?.map(::rowToLocationInfo)?.singleOrNull()
     }
 
-    override suspend fun getLocationById(locationId: Long) = dbQuery {
+    override suspend fun getLocationById(locationId: String) = dbQuery {
         Locations.select {
             Locations.id eq locationId
         }.map(::rowToLocationInfo).singleOrNull()

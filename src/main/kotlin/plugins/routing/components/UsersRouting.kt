@@ -7,6 +7,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import plugins.routing.Routes
+import plugins.routing.respondToCall
 
 
 fun Application.configureUsersRouting(
@@ -19,12 +20,8 @@ fun Application.configureUsersRouting(
                 if (userId == null) {
                     call.respond("Failure. User not found")
                 } else {
-                    val result = clientService.getUser(userId)
-                    if (result == null) {
-                        call.respond("Failure. User not found")
-                    } else {
-                        call.respond(result)
-                    }
+                    val response = clientService.getUser(userId)
+                    call.respondToCall(response)
                 }
             }
         }

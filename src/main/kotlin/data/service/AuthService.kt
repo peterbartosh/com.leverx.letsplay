@@ -164,7 +164,7 @@ class AuthService(
     }
 
     suspend fun refreshToken(refreshToken: String): Response<LoginResponse> {
-        val tokensResult = tokensDao.getTokensByAccessToken(refreshToken)
+        val tokensResult = tokensDao.getTokensByRefreshToken(refreshToken)
         val tokens = tokensResult.getOrNull()
 
         if (tokensResult.isFailure || tokens == null) {
@@ -179,9 +179,12 @@ class AuthService(
         return if (refreshTokenIsExpired) {
             Response.Error(statusCode = HttpStatusCode.Unauthorized, message = "Reathorization required")
         } else {
-            val tokensEntity = tokens.copy(
+            val tokensEntity = TokensEntity(
+                userId = tokens.userId,
                 accessToken = jwtService.createAccessToken(),
-                accessTokenExpiresIn = jwtService.accessTokenExpiresIn()
+                accessTokenExpiresIn = jwtService.accessTokenExpiresIn(),
+                refreshToken = jwtService.createRefreshToken(),
+                refreshTokenExpiresIn = jwtService.refreshTokenExpiresIn()
             )
             val updatedTokensResult = tokensDao.editTokens(tokensEntity = tokensEntity)
             val updatedTokens = updatedTokensResult.getOrNull()

@@ -10,5 +10,5 @@ object Tokens: Table() {
     val accessTokenExpiresIn = long("access_token_expires_in")
     val refreshTokenExpiresIn = long("refresh_token_expires_in")
 
-    override val primaryKey = PrimaryKey(userId, accessToken, refreshToken)
+    override val primaryKey = PrimaryKey(userId)
 }

@@ -43,7 +43,7 @@ class TokensDaoImpl: TokensDao {
     }
 
     override suspend fun editTokens(tokensEntity: TokensEntity) = dbQuery {
-        Tokens.update(
+        val res = Tokens.update(
             where = { Tokens.userId.eq(tokensEntity.userId) }
         ) {
             it[userId] = tokensEntity.userId
@@ -52,7 +52,11 @@ class TokensDaoImpl: TokensDao {
             it[accessTokenExpiresIn] = tokensEntity.accessTokenExpiresIn
             it[refreshTokenExpiresIn] = tokensEntity.refreshTokenExpiresIn
         }
-        val foundToken = Tokens.select { Tokens.userId.eq(tokensEntity.userId) }.map(::rowToTokens).singleOrNull()
+        println("1 $res")
+        val foundToken = Tokens.select {
+            Tokens.userId.eq(tokensEntity.userId)
+        }.map(::rowToTokens).singleOrNull()
+        println("2 $foundToken")
         if (foundToken == tokensEntity) {
             foundToken
         } else null
@@ -60,6 +64,10 @@ class TokensDaoImpl: TokensDao {
 
     override suspend fun deleteTokens(userId: Long) = dbQuery {
         Tokens.deleteWhere { Tokens.userId.eq(userId) } == 1
+    }
+
+    override suspend fun clearAll(): Result<Boolean> = dbQuery {
+        Tokens.deleteAll() == 1
     }
 }
 

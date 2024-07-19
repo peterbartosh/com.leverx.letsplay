@@ -1,7 +1,7 @@
 package model.entity
 
 data class LocationInfoEntity(
-    val id: Long,
+    val id: String,
     val country: String,
     val city: String,
     val address: String,

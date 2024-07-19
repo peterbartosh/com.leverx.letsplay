@@ -8,79 +8,99 @@ import data.tables.events_users.EventsUsersDao
 import data.utils.isNotNullOp
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+
+fun isFinished(sportEventDomain: SportEventEntity) =
+    sportEventDomain.date + sportEventDomain.startTimeMinutes * 60 * 1000 <=
+            System.currentTimeMillis()
 
 class EventsDaoImpl(
     private val eventsUsersDao: EventsUsersDao
 ) : EventsDao {
 
+    override suspend fun getRemainingEventsAmount(userId: Long) = dbQuery {
+        val result = eventsUsersDao.getByUserId(userId)
+        result.getOrNull()?.count { eventUser ->
+            val eventResult = getEventById(eventUser.eventId).getOrNull() ?: return@count false
+            !isFinished(eventResult)
+        } ?: 0
+    }
+
+    override suspend fun getEventById(eventId: Long) = dbQuery {
+        Events.select {
+            Events.id.eq(eventId)
+        }.map(::rowToEvent).singleOrNull()
+    }
+
+    override suspend fun getUserEvents(userId: Long) = dbQuery {
+        eventsUsersDao.getByUserId(userId).getOrNull()?.mapNotNull {
+            Events.select {
+                Events.id.eq(it.eventId)
+            }.map(::rowToEvent).singleOrNull()
+        } ?: emptyList()
+    }
+
     override suspend fun searchEvents(
         searchEventFilter: SearchEventFilter?
     ) = dbQuery {
+
+        println("1 ${searchEventFilter == null}")
 
         if (searchEventFilter == null) {
             Events.selectAll().map(::rowToEvent)
         } else {
             val query = if (searchEventFilter.locationFilter == null) {
-
                 val eventsFilter = Events.eventsFilter(searchEventFilter)
-
-                if (eventsFilter.isNotNullOp()) {
-                    Events.select { eventsFilter }
-                } else {
-                    Events.selectAll()
-                }
+                Events.select { eventsFilter }
 
             } else {
                 val eventsFilter = Events.eventsFilter(searchEventFilter)
                 val locationsFilter = Locations.locationsFilters(searchEventFilter.locationFilter)
-                val finalFilter = if (eventsFilter.isNotNullOp() && locationsFilter.isNotNullOp()) {
-                    eventsFilter.and(locationsFilter)
-                } else if (eventsFilter.isNotNullOp()) {
-                    eventsFilter
-                } else if (locationsFilter.isNotNullOp()) {
-                    locationsFilter
-                } else Op.nullOp()
+                val finalFilter = eventsFilter.and(locationsFilter)
 
-                if (finalFilter.isNotNullOp()) {
-                    Events.leftJoin(Locations).select { finalFilter }
-                } else {
-                    Events.leftJoin(Locations).selectAll()
-                }
+                Events.leftJoin(Locations).select { finalFilter }
             }
-            query.apply {
+
+            println("2 $query")
+
+            val resultData = query.apply {
                 searchEventFilter.limit?.let { limit ->
                     searchEventFilter.skip?.let { skip ->
                         limit(n = limit, offset = skip.toLong())
                     } ?: limit(n = limit)
                 }
             }.map(::rowToEvent)
+            println("3 $resultData")
+            resultData
         }
     }
 
     override suspend fun createEvent(
         sportEventEntity: SportEventEntity,
-        copyId: Boolean
+        adminId: Long
     ) = dbQuery {
-        val insertStatement = Events.insert {
-            if (copyId) {
-                it[id] = sportEventEntity.id
+        val insertStatementResult = dbQuery {
+            Events.insert {
+                it[locationId] = sportEventEntity.locationId
+                it[date] = sportEventEntity.date
+                it[startTimeMinutes] = sportEventEntity.startTimeMinutes
+                it[endTimeMinutes] = sportEventEntity.endTimeMinutes
+                it[sportType] = sportEventEntity.sportType
+                it[skillLevel] = sportEventEntity.skillLevel
+                it[minParticipatorsAmount] = sportEventEntity.minParticipatorsAmount
+                it[maxParticipatorsAmount] = sportEventEntity.maxParticipatorsAmount
             }
-            it[locationId] = sportEventEntity.locationId
-            it[adminId] = sportEventEntity.adminId
-            it[date] = sportEventEntity.date
-            it[startTimeMinutes] = sportEventEntity.startTimeMinutes
-            it[endTimeMinutes] = sportEventEntity.endTimeMinutes
-            it[sportType] = sportEventEntity.sportType
-            it[skillLevel] = sportEventEntity.skillLevel
-            it[minParticipatorsAmount] = sportEventEntity.minParticipatorsAmount
-            it[maxParticipatorsAmount] = sportEventEntity.maxParticipatorsAmount
         }
-        eventsUsersDao.subscribeUserToEvent(
-            userId = sportEventEntity.adminId,
-            eventId = sportEventEntity.id,
-            isAdmin = true
-        )
-        insertStatement.resultedValues?.singleOrNull()?.let(::rowToEvent)
+
+        insertStatementResult.getOrNull()?.resultedValues?.singleOrNull()?.let { row ->
+            val entity = rowToEvent(row)
+            eventsUsersDao.subscribeUserToEvent(
+                userId = adminId,
+                eventId = entity.id,
+                isAdmin = true
+            )
+            entity
+        }
     }
 
     override suspend fun editEvent(
@@ -92,9 +112,6 @@ class EventsDaoImpl(
         ) {
             sportEventEntity?.locationId?.let { _ ->
                 it[locationId] = locationId
-            }
-            sportEventEntity?.adminId?.let { _ ->
-                it[adminId] = adminId
             }
             sportEventEntity?.let { _ ->
                 it[date] = sportEventEntity.date
@@ -119,7 +136,6 @@ class EventsDaoImpl(
 
 fun rowToEvent(row: ResultRow) = SportEventEntity(
     id = row[Events.id],
-    adminId = row[Events.adminId],
     locationId = row[Events.locationId],
     sportType = row[Events.sportType],
     date = row[Events.date],
